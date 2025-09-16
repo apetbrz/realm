@@ -37,7 +37,10 @@ impl RealmEnvironment {
     };
 
     let realm_env = Self {
-      path: env_path.clone(),
+      path: env_path
+        .clone()
+        .canonicalize()
+        .context("Failed to get absolute path to environment")?,
       config,
     };
 
