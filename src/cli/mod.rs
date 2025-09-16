@@ -130,7 +130,13 @@ impl CliHandler {
     }
 
     // Initialize realm environment
-    let _realm_env = RealmEnvironment::init(&path)?;
+    let _realm_env = RealmEnvironment::init(
+      &path,
+      &self
+        .runtime_manager
+        .get_runtime_versions_dir(&runtime)
+        .join(runtime.version()),
+    )?;
 
     println!("✅ Realm environment initialized!");
     println!("🎯 Runtime: {} {}", runtime.name(), runtime.version());

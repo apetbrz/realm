@@ -9,7 +9,7 @@ pub struct RealmEnvironment {
 }
 
 impl RealmEnvironment {
-  pub fn init<P: AsRef<Path>>(path: P) -> Result<Self> {
+  pub fn init<P: AsRef<Path>>(path: P, runtime_dir: P) -> Result<Self> {
     let env_path = path.as_ref().to_path_buf();
 
     if env_path.exists() {
@@ -45,7 +45,12 @@ impl RealmEnvironment {
     };
 
     // Generate activation script
-    realm_env.generate_activation_script()?;
+    realm_env.generate_activation_script(
+      runtime_dir
+        .as_ref()
+        .canonicalize()
+        .context("Failed to get absolute path to runtime")?,
+    )?;
 
     println!("Realm environment created at {}", env_path.display());
     println!("To activate: source {}/bin/activate", env_path.display());
@@ -94,7 +99,7 @@ impl RealmEnvironment {
     ))
   }
 
-  fn generate_activation_script(&self) -> Result<()> {
+  fn generate_activation_script(&self, runtime_dir: PathBuf) -> Result<()> {
     let activate_script = format!(
       r#"#!/bin/bash
 # This file must be used with "source bin/activate" *from bash*
@@ -132,7 +137,7 @@ REALM_ENV="{}"
 export REALM_ENV
 
 _OLD_REALM_PATH="$PATH"
-PATH="{}:$PATH"
+PATH="{}:{}:$PATH"
 export PATH
 
 if [ -z "${{REALM_DISABLE_PROMPT:-}}" ] ; then
@@ -150,7 +155,8 @@ echo "Run 'realm proxy' to start the development proxy"
 echo "Run 'deactivate' to exit the realm environment"
 "#,
       self.path.display(),
-      self.path.join("bin").display()
+      self.path.join("bin").display(),
+      runtime_dir.display()
     );
 
     let activate_path = self.path.join("bin").join("activate");
