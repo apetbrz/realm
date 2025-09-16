@@ -252,6 +252,15 @@ impl RuntimeManager {
     Ok(())
   }
 
+  pub async fn get_latest_of_runtime(&self, runtime: Runtime) -> Result<Runtime> {
+    let updated_runtime = match runtime {
+      Runtime::Bun(_) => Runtime::Bun(self.get_latest_bun_version().await?),
+      Runtime::Node(_) => Runtime::Node(self.get_latest_node_version().await?),
+    };
+
+    Ok(updated_runtime)
+  }
+
   async fn get_latest_bun_version(&self) -> Result<String> {
     let response = self.http_client.get("https://api.github.com/repos/oven-sh/bun/releases/latest").send()
       .await

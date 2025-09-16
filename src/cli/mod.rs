@@ -108,6 +108,10 @@ impl CliHandler {
 
     // Parse runtime specification
     let runtime = Runtime::parse(&runtime_spec)?;
+    let runtime = match runtime.version() {
+      "latest" => self.runtime_manager.get_latest_of_runtime(runtime).await?,
+      _ => runtime,
+    };
 
     // Install runtime if needed
     if !self.runtime_manager.is_version_installed(&runtime) {
